@@ -1,4 +1,4 @@
-# Stochastic MuZero
+# This is a fork of Stochastic MuZero for the purpose of trimming down for application
 
 Pytorch Implementation of [Stochastic MuZero](https://openreview.net/pdf?id=X6D9bAHhBQ1). Base on [Muzero Unplugged](https://github.com/DHDev0/Muzero-unplugged). 
 
