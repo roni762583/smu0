@@ -110,13 +110,13 @@ replay_buffer = ReplayBuffer(
         MostRecentBuffer(max_buffer_size=10),
         HighestRewardBuffer(max_buffer_size=10)
     ],
-    reanalyse_fraction=0.0,  # Fraction of reanalysis
+    reanalyse_fraction=0.1,  # Fraction of reanalysis
     reanalyse_fraction_mode="chance"  # Reanalysis mode ("chance" or "ratio")
 )
 
 # Initialize Monte Carlo Tree Search (MCTS) parameters
 mcts = Monte_carlo_tree_search(
-    num_simulations=0,  # Number of tree levels
+    num_simulations=50,  # Number of tree levels
     maxium_action_sample=2,  # Number of nodes per level
     number_of_player=1,  # Cycles through each player
     pb_c_base=19652,
@@ -151,7 +151,7 @@ epoch_pr, loss, reward, learning_config = learning_cycle(
     model_tag_number=450,
     temperature_type="static_temperature",
     verbose=True,
-    number_of_worker_selfplay=0,
+    number_of_worker_selfplay=4,
     muzero_model=muzero,
     gameplay=gameplay,
     monte_carlo_tree_search=mcts,

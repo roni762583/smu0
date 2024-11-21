@@ -30,19 +30,13 @@ RUN apt-get -y update \
 ENV LD_LIBRARY_PATH=/root/.mujoco/mujoco210/bin
 
 # Install Python dependencies including JupyterLab
-#RUN pip install --upgrade pip \
-#    && pip install numpy torch torchvision gym matplotlib jupyterlab
-
-# Install Python dependencies
 RUN pip install --upgrade pip \
     && pip install numpy torch torchvision matplotlib jupyterlab \
     && pip install gymnasium \
     && pip install ray[default] \
     && pip install v20 \
-    && pip install ipywidgets
-
-
-
+    && pip install ipywidgets \
+    && pip install "gymnasium[classic-control]" pygame
 
 # Expose the port for JupyterLab
 EXPOSE 8888
