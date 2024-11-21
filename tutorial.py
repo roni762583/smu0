@@ -116,7 +116,7 @@ replay_buffer = ReplayBuffer(
 
 # Initialize Monte Carlo Tree Search (MCTS) parameters
 mcts = Monte_carlo_tree_search(
-    num_simulations=50,  # Number of tree levels
+    num_simulations=5,  # Number of tree levels 50 is slow? on cpu?
     maxium_action_sample=2,  # Number of nodes per level
     number_of_player=1,  # Cycles through each player
     pb_c_base=19652,

@@ -1,5 +1,350 @@
 # This is a fork of Stochastic MuZero for the purpose of trimming down for application
 
+# Explanation of workings of stochastic muzero algorithm:
+The Stochastic MuZero (SMuZero) algorithm is an advanced model-based reinforcement learning (RL) method, extending the MuZero framework by incorporating stochastic environments and learning a latent model that captures both the dynamics of the environment and the agent’s policy. Here’s an overview of how it works and how the functional units interact:
+Overview of Stochastic MuZero (SMuZero)
+
+Stochastic MuZero is an offline reinforcement learning algorithm, meaning it doesn't rely on explicit environmental models (like MDPs) but instead learns both a model and a policy directly from data. It combines a deep neural network architecture that learns latent representations and a planning method based on Monte Carlo Tree Search (MCTS). Here’s a breakdown of the components:
+
+    Representation Model:
+        The representation model takes the current state and the action taken by the agent and produces a latent representation of the environment's state.
+
+    Dynamics Model:
+        The dynamics model predicts the next latent state and the reward, based on the current latent state and the action taken.
+
+    Prediction Model:
+        The prediction model outputs the expected value of the current latent state (i.e., the policy and the value), which helps decide the agent's next action during training and inference.
+
+    Value Model:
+        The value model is used to estimate the expected cumulative reward (value) of a state or action.
+
+    Planning with MCTS:
+        MCTS (Monte Carlo Tree Search) is used for planning. It simulates trajectories of states and actions, using the learned models to estimate future rewards and the best actions to take.
+
+Functional Units and Their Interactions
+
+Let’s break down the major functional units and how they communicate during both training and action-selection phases.
+1. Experience Collection & Environment Interaction
+
+    What Happens:
+        The agent interacts with the environment by taking actions and receiving rewards.
+        This interaction generates experience tuples: (state, action, reward, next_state).
+        These experiences are typically stored in an experience replay buffer.
+
+    When It Happens:
+        This occurs during the agent’s interaction with the environment, typically in real-time or in a simulation.
+        The experience is used for training later, providing a set of diverse examples to learn from.
+
+2. Latent State Representation (Function: Representation Model)
+
+    What Happens:
+        The representation model takes the current state as input and outputs a latent representation. This model learns to map raw states (e.g., images, observations) into a more compact and useful representation for downstream tasks.
+        The agent receives raw state inputs, which could be high-dimensional, and the model outputs a lower-dimensional latent state representation.
+
+    When It Happens:
+        This happens both during experience collection (to create a latent state) and during planning (when predicting the next state).
+
+    Why It Happens:
+        The representation allows the algorithm to learn a model that can predict future states from the current latent state, which is crucial for MCTS planning.
+
+3. Dynamics Model (Function: Dynamics Model)
+
+    What Happens:
+        The dynamics model learns to predict how the environment evolves given a latent state and an action. It outputs two things:
+            Next latent state: This is the latent state after taking the action in the current latent state.
+            Reward: This is the expected reward after taking the action.
+    When It Happens:
+        During both training (learning the environment's dynamics) and planning (simulating future states in MCTS).
+    Why It Happens:
+        The dynamics model allows the algorithm to simulate what would happen if it took a particular action in a particular state. This is essential for the planning phase where the agent needs to predict future states and rewards.
+
+4. Prediction Model (Function: Prediction Model)
+
+    What Happens:
+        The prediction model outputs a probability distribution over actions (policy) and the expected value of the state (value function) given a latent state.
+    When It Happens:
+        During training, this model helps calculate the loss for policy and value predictions.
+        During planning (via MCTS), the prediction model estimates the reward and value of different state-action pairs.
+    Why It Happens:
+        The prediction model is key for guiding the agent’s behavior. It helps the agent decide what actions to take by estimating which ones are most likely to lead to higher rewards.
+
+5. Monte Carlo Tree Search (MCTS) (Function: MCTS)
+
+    What Happens:
+        MCTS simulates the future by recursively applying the dynamics model and prediction model to explore possible actions.
+        It performs simulation by creating a tree of possible future states. At each node, it uses the prediction model to select actions, and the dynamics model to simulate the next state.
+        After running simulations, the algorithm backpropagates the estimated rewards to adjust the value of states in the tree.
+    When It Happens:
+        Planning phase: This is invoked every time the agent needs to make a decision about which action to take in a particular state.
+    Why It Happens:
+        MCTS allows the agent to simulate and evaluate the possible consequences of its actions before making a decision, improving its ability to select optimal actions, even in a stochastic environment.
+
+6. Learning Phase (Function: Learning Loop)
+
+    What Happens:
+        The agent periodically updates its models (representation, dynamics, prediction) using the experiences collected and the predictions from MCTS.
+        Loss Calculation: The algorithm computes the loss based on the difference between predicted rewards and true rewards, predicted values and actual values, and predicted policies and actual policies.
+        Gradient Update: The loss is used to compute gradients and update the neural network weights.
+
+    When It Happens:
+        The learning phase happens periodically, after collecting enough experience, to update the model parameters.
+
+    Why It Happens:
+        The learning phase ensures that the models (representation, dynamics, and prediction) improve over time. This is necessary for the algorithm to generalize better to unseen states.
+
+7. Action Selection (Function: Policy Selection via MCTS)
+
+    What Happens:
+        After planning via MCTS, the agent selects an action based on the simulations (i.e., the tree search).
+        The action is chosen based on the estimated value or reward at the tree’s leaf nodes.
+
+    When It Happens:
+        Every time the agent needs to make a decision, whether during training or deployment.
+
+    Why It Happens:
+        Action selection through MCTS ensures that the agent chooses actions based on its learned understanding of the environment, maximizing expected cumulative rewards.
+
+Flow of Operations:
+
+    Collect Experience:
+        The agent interacts with the environment and stores (state, action, reward, next_state) tuples.
+
+    Represent States:
+        The representation model is used to transform states into latent representations.
+
+    Plan (MCTS):
+        For each decision step, MCTS simulates future actions using the dynamics and prediction models to estimate rewards and values.
+
+    Update Models:
+        After collecting enough data and planning, the agent updates its models (representation, dynamics, prediction) using supervised learning and value optimization.
+
+    Select Action:
+        After MCTS planning, the agent selects the action that leads to the highest expected reward.
+
+When Do Different Functional Units Communicate?
+
+    Experience Buffer ↔ Representation Model:
+        The experience buffer feeds raw state data into the representation model to create latent states for training.
+
+    Representation Model ↔ Dynamics & Prediction Models:
+        The representation model interacts with the dynamics and prediction models to provide latent state representations, which are used in simulations and reward predictions.
+
+    Prediction & Dynamics Models ↔ MCTS:
+        MCTS relies on the prediction model to evaluate states and actions, while it uses the dynamics model to simulate future states during planning.
+
+    MCTS ↔ Action Selection:
+        The result of the MCTS planning phase directly informs the action selection step, as the agent chooses the action with the best expected reward.
+
+    Models ↔ Learning:
+        The models (representation, dynamics, prediction) are periodically updated via backpropagation based on the discrepancy between predicted and actual rewards and values.
+
+In summary, Stochastic MuZero combines planning (MCTS) and learning (neural network-based models) in a way that allows the agent to simulate potential futures and optimize its policy even in complex, stochastic environments. The communication between different units (experience buffer, representation, dynamics, prediction, MCTS, learning) ensures that the agent continually refines its internal models and makes decisions based on a combination of past experience and predicted outcomes.
+
+
+
+Plan for Implementing Stochastic MuZero (SMuZero) in Python
+
+To build a Stochastic MuZero (SMuZero) implementation, we need to organize the system into manageable components. Each component will encapsulate specific functionality, from interacting with the environment to learning and planning. Here’s an outline of the necessary components and how they will work together.
+High-Level Overview
+
+    Environment Interaction:
+        The agent will interact with the environment by taking actions and receiving rewards.
+
+    Latent Representation:
+        A deep neural network will be used to learn latent representations of the state, which helps in planning and decision-making.
+
+    Dynamics Model:
+        This model will predict the next state and reward, given a current state and action.
+
+    Prediction Model:
+        This model will estimate the expected value and policy for the current latent state.
+
+    Planning (MCTS):
+        The Monte Carlo Tree Search (MCTS) will simulate future states using the learned models and select the best action.
+
+    Learning:
+        The algorithm will use the experiences to update the models (representation, dynamics, and prediction models) using supervised learning.
+
+    Action Selection:
+        The agent will select an action based on the planning results from MCTS.
+
+Classes and Their Functions
+1. Environment (Env)
+
+    Purpose: To simulate the environment, return the next state and reward based on actions taken by the agent.
+    Methods:
+        reset(): Resets the environment to the initial state.
+        step(action): Takes an action and returns (next_state, reward, done).
+
+2. RepresentationModel
+
+    Purpose: To encode the raw state into a compact latent state representation.
+    Methods:
+        forward(state): Takes the raw state as input and outputs a latent state.
+
+3. DynamicsModel
+
+    Purpose: To predict the next latent state and the reward given the current latent state and action.
+    Methods:
+        forward(state, action): Given a latent state and action, predicts the next latent state and reward.
+
+4. PredictionModel
+
+    Purpose: To output the value and policy (probabilities of each action) for a given latent state.
+    Methods:
+        forward(state): Outputs the policy and value for the given latent state.
+
+5. MCTS
+
+    Purpose: To simulate the environment and select the best action using Monte Carlo Tree Search (MCTS).
+    Methods:
+        search(root_state, model): Runs MCTS to find the best action from a root state using the provided model.
+        expand(node): Expands a node by applying the model and simulating future states.
+
+6. Agent
+
+    Purpose: To tie everything together by interacting with the environment, learning from experience, and selecting actions.
+    Methods:
+        act(state): Selects an action based on the current state (using MCTS for planning).
+        learn(): Updates the models using stored experiences and the learning procedure.
+
+Plan for Implementation
+
+    Environment Simulation:
+        We will use a simple grid-world environment or any other discrete environment where the agent’s actions can be mapped easily to state transitions and rewards.
+        We will simulate the environment’s stochasticity by introducing randomness in the state transitions and rewards.
+
+    Neural Network Models:
+        Use simple feedforward neural networks to model the representation, dynamics, and prediction models. We can use PyTorch or implement them from scratch using NumPy.
+
+    MCTS Implementation:
+        Implement Monte Carlo Tree Search for planning. The tree will have nodes representing latent states, and at each node, we will store the policy and value predicted by the prediction model.
+        MCTS will simulate future states by applying the dynamics model and selecting actions based on the policy.
+
+    Learning:
+        The learning process will be based on the data collected during the agent’s interaction with the environment.
+        We will use Supervised Learning for updating the models by comparing the model's predictions with actual rewards and states from the environment.
+
+    Action Selection:
+        MCTS will be used to choose the best action by simulating future trajectories from the current state.
+
+# Pseudocode in Python
+Classes and Functions
+
+import numpy as np
+
+class Environment:
+    def __init__(self):
+        # Initialize environment
+        pass
+
+    def reset(self):
+        # Reset the environment and return initial state
+        return np.zeros((5, 5))  # example state
+
+    def step(self, action):
+        # Simulate environment response to an action
+        next_state = np.zeros((5, 5))  # example next state
+        reward = np.random.random()  # example random reward
+        done = False  # example done condition
+        return next_state, reward, done
+
+
+class RepresentationModel:
+    def __init__(self):
+        # Initialize a simple model (could be a neural net or a simple transformation)
+        pass
+
+    def forward(self, state):
+        # Convert state to a latent state
+        return np.random.rand(10)  # latent state representation
+
+
+class DynamicsModel:
+    def __init__(self):
+        # Initialize the dynamics model (a simple neural network)
+        pass
+
+    def forward(self, state, action):
+        # Predict next state and reward given current state and action
+        next_state = np.random.rand(10)  # next latent state
+        reward = np.random.random()  # reward prediction
+        return next_state, reward
+
+
+class PredictionModel:
+    def __init__(self):
+        # Initialize the prediction model
+        pass
+
+    def forward(self, state):
+        # Predict value and policy for a given state
+        value = np.random.random()  # value of the state
+        policy = np.random.rand(4)  # action probabilities
+        return value, policy
+
+
+class MCTS:
+    def __init__(self, model, env):
+        self.model = model
+        self.env = env
+
+    def search(self, root_state):
+        # Perform MCTS to determine the best action
+        node = root_state
+        for _ in range(100):  # Run 100 simulations
+            self.expand(node)
+        return np.argmax(node['policy'])  # Return the action with the highest policy
+
+    def expand(self, node):
+        # Simulate future actions using the dynamics model
+        action = np.random.choice(4)  # Example: 4 possible actions
+        next_state, reward = self.model.forward(node, action)
+        node['value'], node['policy'] = self.model.forward(next_state)
+        return node
+
+
+class Agent:
+    def __init__(self, env):
+        self.env = env
+        self.rep_model = RepresentationModel()
+        self.dyn_model = DynamicsModel()
+        self.pred_model = PredictionModel()
+        self.mcts = MCTS(self.pred_model, env)
+
+    def act(self, state):
+        # Select action using MCTS
+        latent_state = self.rep_model.forward(state)
+        action = self.mcts.search(latent_state)
+        return action
+
+    def learn(self, experiences):
+        # Learn from experiences by updating models (e.g., using supervised learning)
+        pass
+
+High-Level Flow
+
+    Initialization:
+        The environment and agent are initialized.
+        The agent's models (representation, dynamics, prediction) are also initialized.
+
+    Training Loop:
+        The agent interacts with the environment by selecting actions using the act() method.
+        The environment returns the next state and reward.
+        The agent stores the experience (state, action, reward, next_state).
+
+    Planning (MCTS):
+        For each action selection, MCTS is performed by the agent to simulate the best actions using the learned models.
+
+    Learning:
+        After collecting enough experience, the agent updates its models using supervised learning or some other suitable optimization method.
+
+# Conclusion
+
+This plan provides a clear structure for implementing Stochastic MuZero using a simple Python setup without relying on large, complex libraries. Each component (environment, models, MCTS, and agent) is modular, allowing for flexibility and easier debugging. The pseudocode outlines the basic interaction between these components and serves as a foundation for further development of the algorithm.
+
+
+
 Pytorch Implementation of [Stochastic MuZero](https://openreview.net/pdf?id=X6D9bAHhBQ1). Base on [Muzero Unplugged](https://github.com/DHDev0/Muzero-unplugged). 
 
 It is suggested to refer to Stochastic MuZero as "unplugged," as setting the reanalyze_ratio to 0 is necessary to achieve Stochastic MuZero. This is because the original "Stochastic MuZero" paper highlights online reinforcement learning, however, as an enhancement to "MuZero Unplugged," it also encompasses offline reinforcement learning capabilities.

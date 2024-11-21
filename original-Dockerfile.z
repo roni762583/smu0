@@ -1,4 +1,9 @@
+# Gemini updated, gpt modified
+
 FROM python:3.10-bullseye
+
+# Copy all project files to /app
+COPY . /app
 
 # Set working directory to /app
 WORKDIR /app
@@ -14,7 +19,6 @@ RUN apt-get -y update \
         patchelf \
         ffmpeg \
         cmake \
-        swig \
     && apt-get autoremove -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
@@ -25,15 +29,17 @@ RUN apt-get -y update \
 # Set LD_LIBRARY_PATH for Mujoco
 ENV LD_LIBRARY_PATH=/root/.mujoco/mujoco210/bin
 
-# Copy only requirements.txt first for cache optimization
-COPY requirements.txt /tmp/
-
-# Install Python dependencies (use cached pip packages)
+# Install Python dependencies including JupyterLab
 RUN pip install --upgrade pip \
-    && pip install --cache-dir=/tmp/pip_cache -r /tmp/requirements.txt
+    && pip install numpy torch torchvision matplotlib jupyterlab \
+    && pip install gymnasium \
+    && pip install ray[default] \
+    && pip install v20 \
+    && pip install ipywidgets \
+    && pip install "gymnasium[classic-control]" pygame
 
-# Copy the rest of the application code to the container
-COPY . /app
+# Expose the port for JupyterLab
+EXPOSE 8888
 
-# Optional: set a default command if running without an entry point script
-CMD ["python", "tutorial.py"]
+# Set the entry point to start JupyterLab
+ENTRYPOINT ["jupyter-lab", "--ip=0.0.0.0", "--port=8888", "--allow-root", "--notebook-dir=/app", "--NotebookApp.default_url=/lab", "--NotebookApp.terminals_enabled=True", "--NotebookApp.token=''", "--NotebookApp.password=''"]
