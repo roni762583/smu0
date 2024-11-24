@@ -116,7 +116,7 @@ replay_buffer = ReplayBuffer(
 
 # Initialize Monte Carlo Tree Search (MCTS) parameters
 mcts = Monte_carlo_tree_search(
-    num_simulations=5,  # Number of tree levels 50 is slow? on cpu?
+    num_simulations=3,  # Number of tree levels 50 is slow? on cpu?
     maxium_action_sample=2,  # Number of nodes per level
     number_of_player=1,  # Cycles through each player
     pb_c_base=19652,
@@ -145,7 +145,7 @@ print(f"Dimension of the observation space: {muzero.observation_dimension}\n"
 
 # Train the model
 epoch_pr, loss, reward, learning_config = learning_cycle(
-    number_of_iteration=1000,
+    number_of_iteration=10,
     number_of_self_play_before_training=10,
     number_of_training_before_self_play=1,
     model_tag_number=450,

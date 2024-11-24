@@ -31,9 +31,10 @@ COPY requirements.txt /tmp/
 # Install Python dependencies (use cached pip packages)
 RUN pip install --upgrade pip \
     && pip install --cache-dir=/tmp/pip_cache -r /tmp/requirements.txt
+    
 
 # Copy the rest of the application code to the container
 COPY . /app
 
 # Optional: set a default command if running without an entry point script
-CMD ["python", "tutorial.py"]
+CMD ["python", "run_trading_game.py"]

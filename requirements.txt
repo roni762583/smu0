@@ -14,3 +14,4 @@ torch==1.13.0+cu116
 -f https://download.pytorch.org/whl/torch_stable.html
 torchvision==0.14.0+cu116
 ray==2.0.1
+pygame

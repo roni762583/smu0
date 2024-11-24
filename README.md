@@ -1,5 +1,5 @@
 # This is a fork of Stochastic MuZero for the purpose of trimming down for application
-
+docker run -it --cpus 2 --shm-size=2.36gb -v "G:/My Drive/ZBAIDA_LLC/Trading/smu0:/app" smu0:latest
 # Explanation of workings of stochastic muzero algorithm:
 The Stochastic MuZero (SMuZero) algorithm is an advanced model-based reinforcement learning (RL) method, extending the MuZero framework by incorporating stochastic environments and learning a latent model that captures both the dynamics of the environment and the agent’s policy. Here’s an overview of how it works and how the functional units interact:
 Overview of Stochastic MuZero (SMuZero)

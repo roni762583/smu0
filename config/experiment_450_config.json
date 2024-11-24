@@ -2,7 +2,7 @@
     "human_demonstration_buffer_builder": {
         "keyboard_map_filename": null,
         "set_default_noop": null,
-        "path_to_store_game": null
+        "path_to_store_game": "config/450_hbuffer.pickle"
     },
     "game": {
         "env": "CartPole-v1",
@@ -39,7 +39,7 @@
         "td_steps": 50,
         "game_sampling": "priority",
         "position_sampling": "priority",
-        "reanalyse_fraction": 0.0,
+        "reanalyse_fraction": 0.1,
         "reanalyse_fraction_mode": "chance"
     },
     "monte_carlo_tree_search": {
@@ -48,7 +48,7 @@
         "discount": 0.997,
         "root_dirichlet_alpha": 0.25,
         "root_exploration_fraction": 0.25,
-        "num_simulations": 0,
+        "num_simulations": 3,
         "maxium_action_sample": 2,
         "number_of_player": 1,
         "custom_loop": null
@@ -57,19 +57,19 @@
         "limit_of_game_play": 500
     },
     "learning_cycle": {
-        "number_of_iteration": 1000,
+        "number_of_iteration": 10,
         "number_of_self_play_before_training": 10,
         "number_of_training_before_self_play": 1,
         "temperature_type": "static_temperature",
         "model_tag_number": 450,
         "verbose": true,
-        "number_of_worker_selfplay": 0
+        "number_of_worker_selfplay": 4
     },
     "play_game_from_checkpoint": {
         "model_tag": 450,
         "model_device": "cpu",
         "mcts_with_or_without_dirichlet_noise": true,
-        "number_of_monte_carlo_tree_search_simulation": 0,
+        "number_of_monte_carlo_tree_search_simulation": 3,
         "temperature": 0,
         "game_iter": 500,
         "slow_mo_in_second": 0.0,
