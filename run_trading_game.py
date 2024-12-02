@@ -1,4 +1,5 @@
 import gymnasium as gym
+from gymnasium.envs.registration import register
 from monte_carlo_tree_search import *
 from game import Game  # Ensure Game is your custom trading game
 from replay_buffer import *
@@ -6,19 +7,36 @@ from self_play import *
 from muzero_model import *
 import numpy as np
 import torch
+import custom_trading_env
 
 # Uncomment to print complete tensor
 torch.set_printoptions(profile="full")
 np.set_printoptions(threshold=np.inf)
 
-# Example for initializing and setting up the trading environment
-# Uncomment to use the game environment and see available structure
-# Show_all_gym_env()
-# Show_specific_gym_env_structure("CustomTradingEnv")  # Replace with your custom trading environment
+# Register the custom environment
+register(
+    id="CustomTradingEnv-v0",
+    entry_point="custom_trading_env:CustomTradingEnv",  # Update this path based on where the environment is defined
+)
 
 # Set the custom trading environment (ensure that your custom environment is properly registered)
 env = gym.make("CustomTradingEnv-v0", render_mode=None)  # Update with your environment name
 
+##################for testing################################
+# Perform a few steps to test the environment
+'''
+for _ in range(5):
+    action = env.action_space.sample()  # Sample a random action
+    state, reward, done, truncation, info = env.step(action)  # Step in the environment
+    print(f"Action: {action}, Reward: {reward}, Done: {done}")
+    if done:
+        break
+'''
+# Close the environment after testing
+#env.close()
+# Ensure the replay buffer is initialized with data
+#print("Initializing replay buffer...")
+##################################################
 # Set the random seed for reproducibility
 seed = 0
 np.random.seed(seed)  # Set the random seed of numpy

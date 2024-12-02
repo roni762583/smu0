@@ -36,5 +36,6 @@ RUN pip install --upgrade pip \
 # Copy the rest of the application code to the container
 COPY . /app
 
-# Optional: set a default command if running without an entry point script
-CMD ["python", "run_trading_game.py"]
+# Run your Python script in the background and then keep the container alive
+CMD ["sh", "-c", "python run_trading_game.py & tail -f /dev/null"]
+
